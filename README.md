@@ -88,6 +88,7 @@ Implement a parent supervisor process that can manage multiple containers at the
 •	Parent reaps exited children correctly with no zombies
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 **Child process:**
 - Sets hostname for UTS isolation
 - Performs chroot() for filesystem isolation
@@ -107,6 +108,7 @@ It utilizes clone() to launch multiple containers, each operating in isolated na
 The supervisor remains active after container creation & continuously manages their concurrent execution without terminating.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ### Multi-Container Runtime with Parent Supervisor
 
 The supervisor process successfully launches and manages multiple containers concurrently using clone() with isolated namespaces (PID, UTS, mount). Each container runs in its own root filesystem and receives a unique PID. The supervisor remains active as a long-running process while containers execute.
@@ -124,24 +126,31 @@ The supervisor process successfully launches and manages multiple containers con
 - Supervisor remains active while managing both
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ### Supervisor Output
 <img width="1650" height="800" alt="Picture5" src="https://github.com/user-attachments/assets/cc217c65-c00f-4e52-8b5d-7d4a8c450116" />
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ### Multi-Container Output 
 <img width="1650" height="800" alt="Picture6" src="https://github.com/user-attachments/assets/b2e111fd-51be-4867-a12f-49c99e84a588" />
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 *Zombie Handling*
 
 The supervisor ensures proper cleanup of child processes. 
 In test mode, waitpid() is used to reap exited children. 
+
 In a full implementation, the supervisor would handle SIGCHLD to avoid zombie processes.
+
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 *Metadata Tracking*
 
 The supervisor can maintain container metadata such as container ID, host PID, and state in user space data structures. 
 In this implementation, basic tracking is demonstrated through printed PIDs, while a complete system would maintain structured metadata.
+
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ### Terminal 2
@@ -365,6 +374,7 @@ Use the runtime to run controlled experiments that connect the project to Linux 
 
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 **The goal:-** not to reimplement a scheduler but to use your runtime as an experimental platform and explain scheduling behavior using evidence.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -439,19 +449,19 @@ By this point, cleanup logic should already be built into Tasks 1–4. This task
 Our runtime achieves process and filesystem isolation using three Linux namespace types combined with chroot.
 
 
-**PID Namespace (`CLONE_NEWPID`):** Each container gets its own PID namespace, making it believe it is PID 1. The host kernel maintains the real PIDs but the container cannot see or signal any host processes. This is enforced at the kernel level — the namespace boundary is maintained by the kernel's PID allocation table.
+**a.) PID Namespace (`CLONE_NEWPID`):** Each container gets its own PID namespace, making it believe it is PID 1. The host kernel maintains the real PIDs but the container cannot see or signal any host processes. This is enforced at the kernel level — the namespace boundary is maintained by the kernel's PID allocation table.
 
 
-**UTS Namespace (`CLONE_NEWUTS`):** Each container gets its own hostname and domain name. When we call `sethostname("alpha")` inside the container, it only affects that container's UTS namespace. The host hostname remains unchanged.
+**b.) UTS Namespace (`CLONE_NEWUTS`):** Each container gets its own hostname and domain name. When we call `sethostname("alpha")` inside the container, it only affects that container's UTS namespace. The host hostname remains unchanged.
 
 
-**Mount Namespace (`CLONE_NEWNS`):** Each container gets its own copy of the mount table. Mounts inside the container (like `/proc`) do not propagate to the host. Combined with `chroot()`, this locks the container into its Alpine rootfs.
+**c.) Mount Namespace (`CLONE_NEWNS`):** Each container gets its own copy of the mount table. Mounts inside the container (like `/proc`) do not propagate to the host. Combined with `chroot()`, this locks the container into its Alpine rootfs.
 
 
-**chroot:** Changes what the process considers `/`. After `chroot(./rootfs)`, the container cannot navigate above its root. It sees Alpine Linux's filesystem, not the host's.
+**> chroot:** Changes what the process considers `/`. After `chroot(./rootfs)`, the container cannot navigate above its root. It sees Alpine Linux's filesystem, not the host's.
 
 
-**What the host kernel still shares:** All containers share the host kernel. There is no separate kernel per container. System calls go to the same kernel. This means kernel vulnerabilities affect all containers. Network namespace is also shared in our implementation — containers share the host network stack.
+**> What the host kernel still shares:** All containers share the host kernel. There is no separate kernel per container. System calls go to the same kernel. This means kernel vulnerabilities affect all containers. Network namespace is also shared in our implementation — containers share the host network stack.
 
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -460,19 +470,19 @@ Our runtime achieves process and filesystem isolation using three Linux namespac
 A long-running parent supervisor is useful because it maintains state across the entire lifetime of all containers. Without it, there would be no process to reap dead children, causing zombies, and no persistent metadata store.
 
 
-**Process creation:** We use `clone()` instead of `fork()` to pass namespace flags. The child process starts in `container_main()` with its own stack.
+**I. Process creation:** We use `clone()` instead of `fork()` to pass namespace flags. The child process starts in `container_main()` with its own stack.
 
 
-**Parent-child relationships:** The supervisor is the parent of all container processes. When a container exits, the kernel sends `SIGCHLD` to the supervisor.
+**II. Parent-child relationships:** The supervisor is the parent of all container processes. When a container exits, the kernel sends `SIGCHLD` to the supervisor.
 
 
-**Reaping:** Our `sigchld_handler()` calls `waitpid(-1, &status, WNOHANG)` in a loop to reap all dead children without blocking. `WNOHANG` is critical — without it the handler would block, freezing the supervisor.
+**III. Reaping:** Our `sigchld_handler()` calls `waitpid(-1, &status, WNOHANG)` in a loop to reap all dead children without blocking. `WNOHANG` is critical — without it the handler would block, freezing the supervisor.
 
 
-**Metadata tracking:** Each container has a `ContainerMeta` struct in a global array. The array is protected by `containers_lock` mutex since both the signal handler and CLI handler threads access it concurrently.
+**IV. Metadata tracking:** Each container has a `ContainerMeta` struct in a global array. The array is protected by `containers_lock` mutex since both the signal handler and CLI handler threads access it concurrently.
 
 
-**Signal delivery:** `SIGTERM` to a container triggers graceful shutdown. `SIGKILL` from the kernel module triggers forced termination. The supervisor detects both via `SIGCHLD` and updates state accordingly.
+**V. Signal delivery:** `SIGTERM` to a container triggers graceful shutdown. `SIGKILL` from the kernel module triggers forced termination. The supervisor detects both via `SIGCHLD` and updates state accordingly.
 
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -487,19 +497,19 @@ Our project uses two IPC mechanisms:
 **IPC Mechanism 2 — UNIX Domain Socket (CLI):** The supervisor listens on `/tmp/engine.sock`. CLI clients connect, send a command string, and read the response. This is named IPC between unrelated processes.
 
 
-**Bounded Buffer synchronization:**
+**> Bounded Buffer synchronization:**
 The bounded buffer has three shared variables: `slots[]`, `head`, `tail`, `count`. Without synchronization, race conditions include:
 - Two producers writing to the same slot simultaneously
 - Consumer reading a slot while producer is writing it
 - `count` being incremented and decremented simultaneously causing corruption
 
-We use:
+> We use:
 - `pthread_mutex_t lock` — ensures only one thread modifies the buffer at a time
 - `pthread_cond_t not_full` — producer waits here when buffer is full, preventing overflow
 - `pthread_cond_t not_empty` — consumer waits here when buffer is empty, preventing busy-waiting
 
 
-**Container metadata synchronization:**
+**> Container metadata synchronization:**
 `containers[]` array is accessed by the SIGCHLD handler, the CLI handler, and producer/consumer threads. We protect it with `containers_lock` mutex. A spinlock would waste CPU since contention is low and lock hold times are short — mutex is the right choice here.
 
 
@@ -507,16 +517,16 @@ We use:
 
 ### 4.4 Memory Management and Enforcement
 
-**What RSS measures:** RSS (Resident Set Size) is the amount of physical RAM currently occupied by a process. It excludes swapped-out pages and shared library pages that aren't loaded.
+**> What RSS measures:** RSS (Resident Set Size) is the amount of physical RAM currently occupied by a process. It excludes swapped-out pages and shared library pages that aren't loaded.
 
 
-**What RSS does not measure:** It does not measure virtual memory (allocated but not yet used), memory-mapped files that aren't resident, or memory shared with other processes counted multiple times.
+**> What RSS does not measure:** It does not measure virtual memory (allocated but not yet used), memory-mapped files that aren't resident, or memory shared with other processes counted multiple times.
 
 
-**Why soft and hard limits are different policies:** A soft limit is a warning threshold — the process may be temporarily spiking and could recover. A hard limit is a kill threshold — the process has exceeded what the system can tolerate. Having both gives graduated response: warn first, then kill if the situation doesn't improve.
+**> Why soft and hard limits are different policies:** A soft limit is a warning threshold — the process may be temporarily spiking and could recover. A hard limit is a kill threshold — the process has exceeded what the system can tolerate. Having both gives graduated response: warn first, then kill if the situation doesn't improve.
 
 
-**Why enforcement belongs in kernel space:** A user-space monitor can be killed, paused, or starved of CPU. If the container process itself is consuming all resources, a user-space monitor may never get scheduled to check it. The kernel always runs — a kernel module's timer callback fires regardless of what user-space processes are doing. This makes enforcement reliable and tamper-proof.
+**> Why enforcement belongs in kernel space:** A user-space monitor can be killed, paused, or starved of CPU. If the container process itself is consuming all resources, a user-space monitor may never get scheduled to check it. The kernel always runs — a kernel module's timer callback fires regardless of what user-space processes are doing. This makes enforcement reliable and tamper-proof.
 
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -538,35 +548,35 @@ When two CPU-bound containers ran at the same nice value, CFS distributed CPU ti
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-### Namespace Isolation
+### I. Namespace Isolation
 **Choice:** PID + UTS + Mount namespaces via `clone()`.
 **Tradeoff:** No network namespace — containers share the host network stack.
 **Justification:** Network namespace requires additional veth pair setup which is beyond the project scope. The three namespaces we use are sufficient to demonstrate isolation.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-### Supervisor Architecture
+### II. Supervisor Architecture
 **Choice:** Single long-running process accepting one CLI connection at a time.
 **Tradeoff:** CLI commands are serialized — two simultaneous `start` commands would queue up.
 **Justification:** Simplifies synchronization significantly. A multi-threaded accept loop would require careful locking around `handle_command`. For our use case, serialized commands are acceptable.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-### IPC and Logging
+### III. IPC and Logging
 **Choice:** Pipes for logging, UNIX socket for CLI.
 **Tradeoff:** Pipes are one-way and anonymous — we need one pipe per container.
 **Justification:** Pipes are the natural IPC for parent-child output capture. UNIX sockets are the natural IPC for request-response CLI commands. Using the same mechanism for both would be more complex.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-### Kernel Monitor
+### IV. Kernel Monitor
 **Choice:** Periodic RSS polling via kernel timer.
 **Tradeoff:** Not instantaneous — a process could briefly exceed hard limit between checks.
 **Justification:** Event-driven memory monitoring requires kernel tracepoints which are significantly more complex. Periodic polling is reliable and simple to implement correctly.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-### Scheduling Experiments
+### V. Scheduling Experiments
 **Choice:** `nice` values and CPU affinity via `taskset`.
 **Tradeoff:** Results vary with host load — not perfectly reproducible.
 **Justification:** These are the standard Linux interfaces for influencing scheduling. They demonstrate CFS behavior without requiring a custom scheduler.
@@ -603,9 +613,11 @@ Two containers running `cpu_hog` simultaneously:
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+
 **Analysis:** The I/O-bound container spent most of its time blocked waiting for I/O, voluntarily yielding the CPU. This allowed the CPU-bound container to use nearly all available CPU. CFS correctly identified beta as low-CPU-demand and prioritized alpha for CPU allocation.
+
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-																					~ Thank You ~
+																		~ Thank You ~
 ---
