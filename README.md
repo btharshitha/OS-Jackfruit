@@ -60,14 +60,14 @@ dmesg | tail
  
  *OUTPUT SCREENSHOTS: -*
 
-<img width="1665" height="954" alt="Picture1" src="https://github.com/user-attachments/assets/ea65be34-faf0-49da-b5df-f67359ea07e9" />
+<img width="1650" height="800" alt="Picture1" src="https://github.com/user-attachments/assets/ea65be34-faf0-49da-b5df-f67359ea07e9" />
 
 
 **Screenshot 0 - Alpine rootfs setup**
 
 Created separate writable root filesystems (rootfs-alpha, rootfs-beta) from base rootfs for multiple containers. 
 
-<img width="714" height="388" alt="Picture2" src="https://github.com/user-attachments/assets/05a6687c-2b41-4247-8329-a31ee31ad905" />
+<img width="1650" height="800" alt="Picture2" src="https://github.com/user-attachments/assets/05a6687c-2b41-4247-8329-a31ee31ad905" />
 
 --- 
 
@@ -124,11 +124,11 @@ The supervisor process successfully launches and manages multiple containers con
 
 
 ### Supervisor Output
-<img width="1696" height="682" alt="Picture5" src="https://github.com/user-attachments/assets/cc217c65-c00f-4e52-8b5d-7d4a8c450116" />
+<img width="1650" height="800" alt="Picture5" src="https://github.com/user-attachments/assets/cc217c65-c00f-4e52-8b5d-7d4a8c450116" />
 
 
 ### Multi-Container Output 
-<img width="1696" height="809" alt="Picture6" src="https://github.com/user-attachments/assets/b2e111fd-51be-4867-a12f-49c99e84a588" />
+<img width="1650" height="800" alt="Picture6" src="https://github.com/user-attachments/assets/b2e111fd-51be-4867-a12f-49c99e84a588" />
 
 
 **Zombie Handling**
@@ -141,7 +141,7 @@ The supervisor can maintain container metadata such as container ID, host PID, a
 In this implementation, basic tracking is demonstrated through printed PIDs, while a complete system would maintain structured metadata.
 
 ### Terminal 2
-<img width="1695" height="877" alt="Picture7" src="https://github.com/user-attachments/assets/9b9cb107-d09a-4f49-81c5-b6077bea2951" />
+<img width="1650" height="800" alt="Picture7" src="https://github.com/user-attachments/assets/9b9cb107-d09a-4f49-81c5-b6077bea2951" />
 
 ---
 
@@ -177,12 +177,12 @@ The command grammar and semantics in ***Canonical CLI Contract***.
 
 
 ## Terminal 1
-<img width="1636" height="840" alt="Picture8" src="https://github.com/user-attachments/assets/76864f98-1a99-422a-9a13-176154215b45" />
+<img width="1650" height="800" alt="Picture8" src="https://github.com/user-attachments/assets/76864f98-1a99-422a-9a13-176154215b45" />
 
 
 
 ## Terminal 2
-<img width="726" height="235" alt="Picture9" src="https://github.com/user-attachments/assets/c2cbd23f-8d78-477e-a547-2222008aa963" />
+<img width="1650" height="800" alt="Picture9" src="https://github.com/user-attachments/assets/c2cbd23f-8d78-477e-a547-2222008aa963" />
 
  
 
@@ -279,12 +279,12 @@ This guarantees safe communication between threads.
 
 
 ## Terminal 1
-<img width="561" height="259" alt="Picture10" src="https://github.com/user-attachments/assets/dd51831e-2659-4e88-9f4c-3ce598a55b46" />
+<img width="1650" height="800" alt="Picture10" src="https://github.com/user-attachments/assets/dd51831e-2659-4e88-9f4c-3ce598a55b46" />
 
 
 
 ## Terminal  2
-<img width="732" height="321" alt="Picture11" src="https://github.com/user-attachments/assets/2b3a46e7-43da-4f32-b473-cd04e067b5b4" />
+<img width="1650" height="800" alt="Picture11" src="https://github.com/user-attachments/assets/2b3a46e7-43da-4f32-b473-cd04e067b5b4" />
 
 
 
@@ -336,12 +336,12 @@ This guarantees safe communication between threads.
 
 
 ## Terminal 1
-<img width="761" height="413" alt="Picture12" src="https://github.com/user-attachments/assets/467a0c79-85ba-4711-b9af-5e469d921c33" />
+<img width="1650" height="800" alt="Picture12" src="https://github.com/user-attachments/assets/467a0c79-85ba-4711-b9af-5e469d921c33" />
 
  
 
 ## Terminal  2
-<img width="766" height="179" alt="Picture13" src="https://github.com/user-attachments/assets/fbfb6649-1c09-4352-b18f-c9434a33c88a" />
+<img width="1650" height="800" alt="Picture13" src="https://github.com/user-attachments/assets/fbfb6649-1c09-4352-b18f-c9434a33c88a" />
 
 
  
@@ -374,13 +374,13 @@ At least one experiment must compare:
 
 
 ## Terminal 1
-<img width="747" height="557" alt="Picture14" src="https://github.com/user-attachments/assets/6c6c542a-f822-42a2-8423-ce3800f26fd3" />
+<img width="1650" height="800" alt="Picture14" src="https://github.com/user-attachments/assets/6c6c542a-f822-42a2-8423-ce3800f26fd3" />
 
 
  
 
 ## Terminal  2
-<img width="745" height="164" alt="Picture15" src="https://github.com/user-attachments/assets/f0197b07-8184-4ace-adee-5092200262c5" />
+<img width="1650" height="800" alt="Picture15" src="https://github.com/user-attachments/assets/f0197b07-8184-4ace-adee-5092200262c5" />
 
 
 
@@ -411,12 +411,12 @@ Verify clean teardown in both user and kernel space:
 
 
 ## Terminal 1
-<img width="753" height="272" alt="Picture16" src="https://github.com/user-attachments/assets/12616be0-35fb-4ed5-95b1-91123bd37207" />
+<img width="1650" height="800" alt="Picture16" src="https://github.com/user-attachments/assets/12616be0-35fb-4ed5-95b1-91123bd37207" />
 
  
 
 ## Terminal 2
-<img width="754" height="421" alt="Picture17" src="https://github.com/user-attachments/assets/0d1653c8-f292-4567-9b80-4fd5166a60d7" />
+<img width="1650" height="800" alt="Picture17" src="https://github.com/user-attachments/assets/0d1653c8-f292-4567-9b80-4fd5166a60d7" />
 
 
  
