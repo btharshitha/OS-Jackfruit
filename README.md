@@ -57,29 +57,36 @@ dmesg | tail
 
  
 # **Operating Systems - Jackfruit Problem**
+ 
  *OUTPUT SCREENSHOTS: -*
 
 <img width="1665" height="954" alt="Picture1" src="https://github.com/user-attachments/assets/ea65be34-faf0-49da-b5df-f67359ea07e9" />
 
+
 **Screenshot 0 - Alpine rootfs setup**
+
 Created separate writable root filesystems (rootfs-alpha, rootfs-beta) from base rootfs for multiple containers. 
 
 <img width="714" height="388" alt="Picture2" src="https://github.com/user-attachments/assets/05a6687c-2b41-4247-8329-a31ee31ad905" />
 
-## Task 1: Multi-Container Runtime with Parent Supervisor
-Implement a parent supervisor process that can manage multiple containers at the same time instead of launching 
-only one shell and exiting.
+--- 
+
+# Task 1: Multi-Container Runtime with Parent Supervisor
+Implement a parent supervisor process that can manage multiple containers at the same time instead of launching only one shell and exiting.
 
 ### Demonstrate:
 •	Supervisor process remains alive while containers run
+
 •	Multiple containers can be started and tracked concurrently
+
 •	Each container has isolated PID, UTS, and mount namespaces
+
 •	Each container uses its own rootfs copy derived from the provided base rootfs
+
 •	/proc works correctly inside each container
+
 •	Parent reaps exited children correctly with no zombies
 
- 
- 
 
 **Child process:**
 - Sets hostname for UTS isolation
@@ -88,21 +95,18 @@ only one shell and exiting.
 - Executes /bin/sh inside container
 
  *Single container execution using clone() and namespaces* 
-
+ 
 **So, Container isolation and /proc working, Verification:**
 - hostname shows "container" → UTS namespace working
 - ls / shows isolated filesystem → chroot working
 - ps shows only container processes → PID namespace working
 
- 
-
- 
- 
 
 The supervisor is designed as a long-running process using an infinite loop. 
 It utilizes clone() to launch multiple containers, each operating in isolated namespaces with its own root filesystem. 
 The supervisor remains active after container creation & continuously manages their concurrent execution without terminating.
-Multi-Container Runtime with Parent Supervisor
+
+### Multi-Container Runtime with Parent Supervisor
 
 The supervisor process successfully launches and manages multiple containers concurrently using clone() with isolated namespaces (PID, UTS, mount). Each container runs in its own root filesystem and receives a unique PID. The supervisor remains active as a long-running process while containers execute.
 
@@ -118,11 +122,14 @@ The supervisor process successfully launches and manages multiple containers con
 - Each has a unique PID
 - Supervisor remains active while managing both
 
-### Supervisor Output
- 
 
-### Multi-Container Output
- 
+### Supervisor Output
+<img width="696" height="62" alt="Picture5" src="https://github.com/user-attachments/assets/cc217c65-c00f-4e52-8b5d-7d4a8c450116" />
+
+
+### Multi-Container Output 
+<img width="696" height="109" alt="Picture6" src="https://github.com/user-attachments/assets/b2e111fd-51be-4867-a12f-49c99e84a588" />
+
 
 **Zombie Handling**
 The supervisor ensures proper cleanup of child processes. 
@@ -134,22 +141,24 @@ The supervisor can maintain container metadata such as container ID, host PID, a
 In this implementation, basic tracking is demonstrated through printed PIDs, while a complete system would maintain structured metadata.
 
 ### Terminal 2
+<img width="695" height="377" alt="Picture7" src="https://github.com/user-attachments/assets/9b9cb107-d09a-4f49-81c5-b6077bea2951" />
 
- 
+---
 
-## Task 2: Supervisor CLI and Signal Handling
+
+# Task 2: Supervisor CLI and Signal Handling
 
 Implement a CLI interface for interacting with the supervisor. Commands are passed as arguments to the engine program.
-The command grammar and semantics in Canonical CLI Contract.
+The command grammar and semantics in ***Canonical CLI Contract***.
 
-Required commands:
+### Required commands:
 •	start : launch a new container in the background
 •	run : launch a container and wait for it in the foreground
 •	ps : list tracked containers and their metadata
 •	logs : inspect a container log file
 •	stop : terminate a running container cleanly
 
-Demonstrate:
+### Demonstrate:
 •	CLI requests reach the long-running supervisor correctly
 •	Supervisor updates container state after each command
 •	SIGCHLD handling is correct and does not leak zombies
@@ -157,52 +166,66 @@ Demonstrate:
 •	Container termination path distinguishes graceful stop vs forced kill
 
 ## Terminal 1
+<img width="736" height="740" alt="Picture8" src="https://github.com/user-attachments/assets/76864f98-1a99-422a-9a13-176154215b45" />
 
+
+## Terminal 2
+<img width="726" height="235" alt="Picture9" src="https://github.com/user-attachments/assets/c2cbd23f-8d78-477e-a547-2222008aa963" />
  
-        	# Terminal 2
 
- 
-
-1. CLI → Supervisor communication
+#### 1. CLI → Supervisor communication
 Commands are issued via CLI and processed by the engine program. 
 The supervisor interprets these commands and performs the requested operations.
-2. Supervisor updates state
+
+#### 2. Supervisor updates state
 The supervisor manages container lifecycle and updates execution flow based on commands such as run and start.
-3. SIGCHLD handling
+
+#### 3. SIGCHLD handling
 The system uses waitpid() to handle child process termination and avoid zombie processes.
-4. SIGINT / SIGTERM
+
+#### 4. SIGINT / SIGTERM
 The supervisor can be terminated using Ctrl+C (SIGINT). 
 This allows graceful shutdown of the system.
-5. Graceful vs forced stop
+
+#### 5. Graceful vs forced stop
 The stop command represents graceful termination. 
 A full implementation can distinguish between normal stop and forced kill using signals.
 
 Overall, the supervisor successfully manages container lifecycle, ensures proper signal handling, and provides a clean CLI interface for interaction.
 
 
+---
 
-	Task 3: Bounded-Buffer Logging and IPC Design
+
+# Task 3: Bounded-Buffer Logging and IPC Design
 
 This task covers Path A (logging): the pipe-based IPC from each container's stdout/stderr into the supervisor 
 
-Demonstrate:
+### Demonstrate:
 •	File-descriptor-based IPC from each container into the supervisor
+
 •	Capture of both stdout and stderr
+
 •	A bounded buffer in user space between producers and consumers
+
 •	Correct producer-consumer synchronization
+
 •	Persistent per-container log files
+
 •	Clean logger shutdown when containers exit or the supervisor stops.
+
 
 In this task, container output is captured using pipe-based IPC instead of printing directly to the terminal. 
 Each container’s stdout and stderr are redirected to pipes, allowing the supervisor to collect and process logs asynchronously.
 
-Producer–Consumer Model :-  The logging system follows a producer–consumer architecture:
+**Producer–Consumer Model :-**  The logging system follows a producer–consumer architecture:
 •	Producer threads read data from container pipes (stdout and stderr) 
 •	The data is inserted into a bounded shared buffer 
 •	Consumer threads remove data from the buffer and write it to log files 
 This ensures efficient and concurrent log handling.
 
-Synchronization Mechanism :- To avoid race conditions and ensure correctness:
+
+**Synchronization Mechanism :-**  To avoid race conditions and ensure correctness:
 •	A mutex is used to protect shared buffer access 
 •	Condition variables are used to: 
 o	Block producers when the buffer is full 
@@ -210,68 +233,82 @@ o	Block consumers when the buffer is empty
 This guarantees safe communication between threads.
 
 
-
-Bounded Buffer Behavior :- The buffer has a fixed size to control memory usage:
+**Bounded Buffer Behavior :-**  The buffer has a fixed size to control memory usage:
 •	Prevents unlimited memory growth 
 •	Ensures backpressure when producers are faster than consumers 
 •	Avoids data loss and corruption 
 
-Logging and Persistence :- Each container has a separate log file:
+
+**Logging and Persistence :-**  Each container has a separate log file:
 •	Logs are written continuously by consumer threads 
 •	Both stdout and stderr are captured 
 •	Data is preserved even if the container exits 
 
-Clean Shutdown Handling :- The system ensures proper cleanup:
+
+**Clean Shutdown Handling :-**  The system ensures proper cleanup:
 •	Producer threads exit when the container terminates 
 •	Consumer threads flush remaining data before exiting 
 •	Threads are joined to avoid resource leaks
 
-      # Terminal 1
 
- 
-
-         # Terminal  2
-
- 
+## Terminal 1
+<img width="561" height="259" alt="Picture10" src="https://github.com/user-attachments/assets/dd51831e-2659-4e88-9f4c-3ce598a55b46" />
 
 
+## Terminal  2
+<img width="732" height="321" alt="Picture11" src="https://github.com/user-attachments/assets/2b3a46e7-43da-4f32-b473-cd04e067b5b4" />
 
 
+---
 
+# Task 4: Kernel Memory Monitoring with Soft and Hard Limits
 
-        Task 4: Kernel Memory Monitoring with Soft and Hard Limits
-
-Demonstrate:
+### Demonstrate:
 •	Control device at /dev/container_monitor
+
 •	PID registration from the supervisor via ioctl
+
 •	Tracking of monitored processes in a kernel linked list
+
 •	Lock-protected shared list access (mutex or spinlock)
+
 •	Periodic RSS checks
+
 •	Separate soft-limit and hard-limit behavior
+
 •	Removal of stale or exited entries
-Required policy behavior:
+
+### Required policy behavior:
 •	Soft limit: log a warning event when the process first exceeds the soft limit
+
 •	Hard limit: terminate the process when it exceeds the hard limit
-Integration detail:
+
+### Integration detail:
 •	The supervisor must send the container's host PID to the kernel module
+
 •	The user-space metadata must reflect whether a container exited normally, was stopped by the supervisor, or was killed due to the hard limit
-Required:
+
+### Required:
 •	The supervisor must set an internal stop_requested flag before signaling a container from stop
+
 •	Classify termination as stopped when stop_requested is set and the container exits due to that stop flow
+
 •	Classify termination as hard_limit_killed only when the exit signal is SIGKILL and stop_requested is not set
+
 •	Keep the final reason in metadata so ps output can distinguish normal exit, manual stop, and hard-limit kill
 
-    # Terminal 1
+
+## Terminal 1
 
  
 
-    # Terminal  2
+## Terminal  2
 
  
+---
 
 
-
-                        Task 5: Scheduler Experiments and Analysis
+# Task 5: Scheduler Experiments and Analysis
 
 Use the runtime to run controlled experiments that connect the project to Linux scheduling behavior.:
 •	At least two concurrent workloads with different behavior, such as CPU-bound and I/O-bound processes
@@ -283,17 +320,17 @@ At least one experiment must compare:
 •	Two containers running CPU-bound work with different priorities, or
 •	A CPU-bound container and an I/O-bound container running at the same time
 
-    # Terminal 1
+## Terminal 1
 
  
 
-    # Terminal  2
+## Terminal  2
 
  
+---
 
 
-
-          Task 6: Resource Cleanup
+# Task 6: Resource Cleanup
 
 By this point, cleanup logic should already be built into Tasks 1–4. This task is about verifying and demonstrating that teardown works end-to-end, not about designing it from scratch.
 Verify clean teardown in both user and kernel space:
@@ -304,23 +341,23 @@ Verify clean teardown in both user and kernel space:
 •	Kernel list entries are freed on module unload (designed in Task 4)
 •	No lingering zombie processes or stale metadata after demo run
 
-    # Terminal 1
+## Terminal 1
 
  
 
-    # Terminal 2
+## Terminal 2
 
  
 
 Task 6 clean teardown — dmesg shows kernel module registering container PID, stale entry removal on exit, and clean module unload. engine ps confirms container state as stopped with no zombie processes remaining
 
-~ Thank You ~
+																									~ Thank You ~
 
 
 ---
 
 
-## 4. Engineering Analysis
+# 4. Engineering Analysis
 ### 4.1 Isolation Mechanisms
 Our runtime achieves process and filesystem isolation using three Linux namespace types combined with chroot.
 
@@ -384,9 +421,11 @@ In our experiments we ran CPU-bound and I/O-bound workloads simultaneously with 
 
 When two CPU-bound containers ran at the same nice value, CFS distributed CPU time approximately equally between them, consistent with its fairness goal.
 
+
 ---
 
-## 5. Design Decisions and Tradeoffs
+
+# 5. Design Decisions and Tradeoffs
 
 ### Namespace Isolation
 **Choice:** PID + UTS + Mount namespaces via `clone()`.
@@ -415,7 +454,7 @@ When two CPU-bound containers ran at the same nice value, CFS distributed CPU ti
 
 ---
 
-## 6. Scheduler Experiment Results
+# 6. Scheduler Experiment Results
 
 ### Experiment 1 — CPU-bound containers with different priorities
 Two containers running `cpu_hog` simultaneously:
@@ -440,5 +479,5 @@ Two containers running `cpu_hog` simultaneously:
 
 **Analysis:** The I/O-bound container spent most of its time blocked waiting for I/O, voluntarily yielding the CPU. This allowed the CPU-bound container to use nearly all available CPU. CFS correctly identified beta as low-CPU-demand and prioritized alpha for CPU allocation.
 
-
+																											~ Thank You ~
 ---
