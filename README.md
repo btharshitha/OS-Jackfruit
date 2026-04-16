@@ -59,7 +59,7 @@ dmesg | tail
 **Operating Systems - Jackfruit Problem**
 *OUTPUT SCREENSHOTS: -*
 
-"C:\Users\Harshitha.B.T\OneDrive\Desktop\Picture1.png"
+<img width="1665" height="954" alt="Picture1" src="https://github.com/user-attachments/assets/ea65be34-faf0-49da-b5df-f67359ea07e9" />
 
 # Screenshot 0 - Alpine rootfs setup
 Created separate writable root filesystems (rootfs-alpha, rootfs-beta) from base rootfs for multiple containers. Task 1: Multi-Container Runtime with Parent Supervisor
