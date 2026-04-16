@@ -106,6 +106,7 @@ The supervisor is designed as a long-running process using an infinite loop.
 It utilizes clone() to launch multiple containers, each operating in isolated namespaces with its own root filesystem. 
 The supervisor remains active after container creation & continuously manages their concurrent execution without terminating.
 
+``
 ### Multi-Container Runtime with Parent Supervisor
 
 The supervisor process successfully launches and manages multiple containers concurrently using clone() with isolated namespaces (PID, UTS, mount). Each container runs in its own root filesystem and receives a unique PID. The supervisor remains active as a long-running process while containers execute.
@@ -125,20 +126,22 @@ The supervisor process successfully launches and manages multiple containers con
 
 ### Supervisor Output
 <img width="1650" height="800" alt="Picture5" src="https://github.com/user-attachments/assets/cc217c65-c00f-4e52-8b5d-7d4a8c450116" />
-
+``
 
 ### Multi-Container Output 
 <img width="1650" height="800" alt="Picture6" src="https://github.com/user-attachments/assets/b2e111fd-51be-4867-a12f-49c99e84a588" />
-
+``
 
 **Zombie Handling**
 The supervisor ensures proper cleanup of child processes. 
 In test mode, waitpid() is used to reap exited children. 
 In a full implementation, the supervisor would handle SIGCHLD to avoid zombie processes.
+``
 
 **Metadata Tracking**
 The supervisor can maintain container metadata such as container ID, host PID, and state in user space data structures. 
 In this implementation, basic tracking is demonstrated through printed PIDs, while a complete system would maintain structured metadata.
+``
 
 ### Terminal 2
 <img width="1650" height="800" alt="Picture7" src="https://github.com/user-attachments/assets/9b9cb107-d09a-4f49-81c5-b6077bea2951" />
@@ -174,18 +177,18 @@ The command grammar and semantics in ***Canonical CLI Contract***.
 •	SIGINT/SIGTERM to the supervisor trigger orderly shutdown
 
 •	Container termination path distinguishes graceful stop vs forced kill
-
+--
 
 ## Terminal 1
 <img width="1650" height="800" alt="Picture8" src="https://github.com/user-attachments/assets/76864f98-1a99-422a-9a13-176154215b45" />
 
 
-
+--
 ## Terminal 2
 <img width="1650" height="800" alt="Picture9" src="https://github.com/user-attachments/assets/c2cbd23f-8d78-477e-a547-2222008aa963" />
 
  
-
+--
 #### 1. CLI → Supervisor communication
 Commands are issued via CLI and processed by the engine program. 
 The supervisor interprets these commands and performs the requested operations.
@@ -238,7 +241,7 @@ This task covers Path A (logging): the pipe-based IPC from each container's stdo
 
 In this task, container output is captured using pipe-based IPC instead of printing directly to the terminal. 
 Each container’s stdout and stderr are redirected to pipes, allowing the supervisor to collect and process logs asynchronously.
-
+``
 
 **> Producer–Consumer Model :-**  The logging system follows a producer–consumer architecture:
 •	Producer threads read data from container pipes (stdout and stderr) 
@@ -247,7 +250,7 @@ Each container’s stdout and stderr are redirected to pipes, allowing the super
 This ensures efficient and concurrent log handling.
 
 
-
+``
 **> Synchronization Mechanism :-**  To avoid race conditions and ensure correctness:
 •	A mutex is used to protect shared buffer access 
 •	Condition variables are used to: 
@@ -421,9 +424,9 @@ Verify clean teardown in both user and kernel space:
 
  
 
-### Task 6 clean teardown — dmesg shows kernel module registering container PID, stale entry removal on exit, and clean module unload. engine ps confirms container state as stopped with no zombie processes remaining
+**Task 6 clean teardown** — dmesg shows kernel module registering container PID, stale entry removal on exit, and clean module unload. engine ps confirms container state as stopped with no zombie processes remaining
 
-												~ Thank You ~
+														~ Thank You ~
 
 
 ---
