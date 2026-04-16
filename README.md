@@ -59,6 +59,8 @@ dmesg | tail
 Operating Systems - Jackfruit Problem 
 OUTPUT SCREENSHOTS: -
 
+<img width="2004" height="1003" alt="image" src="https://github.com/user-attachments/assets/0a5633a0-156b-4810-9d4e-f150ba681eb0" />
+
 # Screenshot 0 - Alpine rootfs setup
 Created separate writable root filesystems (rootfs-alpha, rootfs-beta) from base rootfs for multiple containers. Task 1: Multi-Container Runtime with Parent Supervisor
 Implement a parent supervisor process that can manage multiple containers at the same time instead of launching 
