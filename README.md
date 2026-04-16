@@ -124,11 +124,11 @@ The supervisor process successfully launches and manages multiple containers con
 
 
 ### Supervisor Output
-<img width="696" height="62" alt="Picture5" src="https://github.com/user-attachments/assets/cc217c65-c00f-4e52-8b5d-7d4a8c450116" />
+<img width="1696" height="682" alt="Picture5" src="https://github.com/user-attachments/assets/cc217c65-c00f-4e52-8b5d-7d4a8c450116" />
 
 
 ### Multi-Container Output 
-<img width="696" height="109" alt="Picture6" src="https://github.com/user-attachments/assets/b2e111fd-51be-4867-a12f-49c99e84a588" />
+<img width="1696" height="809" alt="Picture6" src="https://github.com/user-attachments/assets/b2e111fd-51be-4867-a12f-49c99e84a588" />
 
 
 **Zombie Handling**
@@ -141,7 +141,7 @@ The supervisor can maintain container metadata such as container ID, host PID, a
 In this implementation, basic tracking is demonstrated through printed PIDs, while a complete system would maintain structured metadata.
 
 ### Terminal 2
-<img width="695" height="377" alt="Picture7" src="https://github.com/user-attachments/assets/9b9cb107-d09a-4f49-81c5-b6077bea2951" />
+<img width="1695" height="877" alt="Picture7" src="https://github.com/user-attachments/assets/9b9cb107-d09a-4f49-81c5-b6077bea2951" />
 
 ---
 
@@ -177,7 +177,7 @@ The command grammar and semantics in ***Canonical CLI Contract***.
 
 
 ## Terminal 1
-<img width="736" height="740" alt="Picture8" src="https://github.com/user-attachments/assets/76864f98-1a99-422a-9a13-176154215b45" />
+<img width="1636" height="840" alt="Picture8" src="https://github.com/user-attachments/assets/76864f98-1a99-422a-9a13-176154215b45" />
 
 
 
@@ -240,7 +240,7 @@ In this task, container output is captured using pipe-based IPC instead of print
 Each container’s stdout and stderr are redirected to pipes, allowing the supervisor to collect and process logs asynchronously.
 
 
-**~ Producer–Consumer Model :-**  The logging system follows a producer–consumer architecture:
+**> Producer–Consumer Model :-**  The logging system follows a producer–consumer architecture:
 •	Producer threads read data from container pipes (stdout and stderr) 
 •	The data is inserted into a bounded shared buffer 
 •	Consumer threads remove data from the buffer and write it to log files 
@@ -248,7 +248,7 @@ This ensures efficient and concurrent log handling.
 
 
 
-**~ Synchronization Mechanism :-**  To avoid race conditions and ensure correctness:
+**> Synchronization Mechanism :-**  To avoid race conditions and ensure correctness:
 •	A mutex is used to protect shared buffer access 
 •	Condition variables are used to: 
 o	Block producers when the buffer is full 
@@ -257,21 +257,21 @@ This guarantees safe communication between threads.
 
 
 
-**~ Bounded Buffer Behavior :-**  The buffer has a fixed size to control memory usage:
+**> Bounded Buffer Behavior :-**  The buffer has a fixed size to control memory usage:
 •	Prevents unlimited memory growth 
 •	Ensures backpressure when producers are faster than consumers 
 •	Avoids data loss and corruption 
 
 
 
-**~ Logging and Persistence :-**  Each container has a separate log file:
+**> Logging and Persistence :-**  Each container has a separate log file:
 •	Logs are written continuously by consumer threads 
 •	Both stdout and stderr are captured 
 •	Data is preserved even if the container exits 
 
 
 
-**~ Clean Shutdown Handling :-**  The system ensures proper cleanup:
+**> Clean Shutdown Handling :-**  The system ensures proper cleanup:
 •	Producer threads exit when the container terminates 
 •	Consumer threads flush remaining data before exiting 
 •	Threads are joined to avoid resource leaks
