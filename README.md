@@ -132,15 +132,15 @@ The supervisor process successfully launches and manages multiple containers con
 <img width="1650" height="800" alt="Picture6" src="https://github.com/user-attachments/assets/b2e111fd-51be-4867-a12f-49c99e84a588" />
 
 --
-**Zombie Handling**
+*Zombie Handling*
 The supervisor ensures proper cleanup of child processes. 
 In test mode, waitpid() is used to reap exited children. 
 In a full implementation, the supervisor would handle SIGCHLD to avoid zombie processes.
---
-**Metadata Tracking**
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*Metadata Tracking*
 The supervisor can maintain container metadata such as container ID, host PID, and state in user space data structures. 
 In this implementation, basic tracking is demonstrated through printed PIDs, while a complete system would maintain structured metadata.
---
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ### Terminal 2
 <img width="1650" height="800" alt="Picture7" src="https://github.com/user-attachments/assets/9b9cb107-d09a-4f49-81c5-b6077bea2951" />
