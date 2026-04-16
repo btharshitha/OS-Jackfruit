@@ -57,18 +57,20 @@ dmesg | tail
 
  
 # **Operating Systems - Jackfruit Problem**
-# *OUTPUT SCREENSHOTS: -*
+ *OUTPUT SCREENSHOTS: -*
 
 <img width="1665" height="954" alt="Picture1" src="https://github.com/user-attachments/assets/ea65be34-faf0-49da-b5df-f67359ea07e9" />
 
-# Screenshot 0 - Alpine rootfs setup
+**Screenshot 0 - Alpine rootfs setup**
 Created separate writable root filesystems (rootfs-alpha, rootfs-beta) from base rootfs for multiple containers. 
 
-Task 1: Multi-Container Runtime with Parent Supervisor
+<img width="714" height="388" alt="Picture2" src="https://github.com/user-attachments/assets/05a6687c-2b41-4247-8329-a31ee31ad905" />
+
+## Task 1: Multi-Container Runtime with Parent Supervisor
 Implement a parent supervisor process that can manage multiple containers at the same time instead of launching 
 only one shell and exiting.
 
-Demonstrate:
+### Demonstrate:
 •	Supervisor process remains alive while containers run
 •	Multiple containers can be started and tracked concurrently
 •	Each container has isolated PID, UTS, and mount namespaces
@@ -79,15 +81,15 @@ Demonstrate:
  
  
 
-Child process:
+**Child process:**
 - Sets hostname for UTS isolation
 - Performs chroot() for filesystem isolation
 - Mounts /proc for process visibility
 - Executes /bin/sh inside container
 
- Single container execution using clone() and namespaces 
+ *Single container execution using clone() and namespaces* 
 
-So, Container isolation and /proc working, Verification:
+**So, Container isolation and /proc working, Verification:**
 - hostname shows "container" → UTS namespace working
 - ls / shows isolated filesystem → chroot working
 - ps shows only container processes → PID namespace working
@@ -104,38 +106,38 @@ Multi-Container Runtime with Parent Supervisor
 
 The supervisor process successfully launches and manages multiple containers concurrently using clone() with isolated namespaces (PID, UTS, mount). Each container runs in its own root filesystem and receives a unique PID. The supervisor remains active as a long-running process while containers execute.
 
-The supervisor launches multiple containers using clone() with:
+**The supervisor launches multiple containers using clone() with:**
 - CLONE_NEWPID (PID isolation)
 - CLONE_NEWUTS (hostname isolation)
 - CLONE_NEWNS (filesystem isolation)
 
-Each container runs independently with its own:   PID namespace ; hostname ; root filesystem (via chroot)
+*Each container runs independently with its own:   PID namespace ; hostname ; root filesystem (via chroot)*
   
-   Multi-container execution , Verification:
+**Multi-container execution , Verification:**
 - Two containers (alpha, beta) run simultaneously
 - Each has a unique PID
 - Supervisor remains active while managing both
 
-Supervisor Output
+### Supervisor Output
  
 
-Multi-Container Output
+### Multi-Container Output
  
 
-Zombie Handling
+**Zombie Handling**
 The supervisor ensures proper cleanup of child processes. 
 In test mode, waitpid() is used to reap exited children. 
 In a full implementation, the supervisor would handle SIGCHLD to avoid zombie processes.
 
-Metadata Tracking
+**Metadata Tracking**
 The supervisor can maintain container metadata such as container ID, host PID, and state in user space data structures. 
 In this implementation, basic tracking is demonstrated through printed PIDs, while a complete system would maintain structured metadata.
 
-# Terminal 2
+### Terminal 2
 
  
 
-         Task 2: Supervisor CLI and Signal Handling
+## Task 2: Supervisor CLI and Signal Handling
 
 Implement a CLI interface for interacting with the supervisor. Commands are passed as arguments to the engine program.
 The command grammar and semantics in Canonical CLI Contract.
@@ -154,7 +156,7 @@ Demonstrate:
 •	SIGINT/SIGTERM to the supervisor trigger orderly shutdown
 •	Container termination path distinguishes graceful stop vs forced kill
 
-# Terminal 1
+## Terminal 1
 
  
         	# Terminal 2
