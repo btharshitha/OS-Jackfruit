@@ -177,7 +177,8 @@ The command grammar and semantics in ***Canonical CLI Contract***.
 
 •	SIGINT/SIGTERM to the supervisor trigger orderly shutdown
 
-•	Container termination path distinguishes graceful stop vs forced kill
+Container termination path distinguishes graceful stop vs forced kill
+
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ## Terminal 1
@@ -239,9 +240,9 @@ This task covers Path A (logging): the pipe-based IPC from each container's stdo
 
 •	Clean logger shutdown when containers exit or the supervisor stops.
 
-
 In this task, container output is captured using pipe-based IPC instead of printing directly to the terminal. 
 Each container’s stdout and stderr are redirected to pipes, allowing the supervisor to collect and process logs asynchronously.
+
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 **> Producer–Consumer Model :-**  The logging system follows a producer–consumer architecture:
@@ -433,6 +434,7 @@ By this point, cleanup logic should already be built into Tasks 1–4. This task
 
 # 4. Engineering Analysis
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ### 4.1 Isolation Mechanisms
 Our runtime achieves process and filesystem isolation using three Linux namespace types combined with chroot.
 
@@ -453,6 +455,7 @@ Our runtime achieves process and filesystem isolation using three Linux namespac
 
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ### 4.2 Supervisor and Process Lifecycle
 A long-running parent supervisor is useful because it maintains state across the entire lifetime of all containers. Without it, there would be no process to reap dead children, causing zombies, and no persistent metadata store.
 
@@ -473,6 +476,7 @@ A long-running parent supervisor is useful because it maintains state across the
 
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ### 4.3 IPC, Threads, and Synchronization
 Our project uses two IPC mechanisms:
 
@@ -500,6 +504,7 @@ We use:
 
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ### 4.4 Memory Management and Enforcement
 
 **What RSS measures:** RSS (Resident Set Size) is the amount of physical RAM currently occupied by a process. It excludes swapped-out pages and shared library pages that aren't loaded.
@@ -532,30 +537,35 @@ When two CPU-bound containers ran at the same nice value, CFS distributed CPU ti
 # 5. Design Decisions and Tradeoffs
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ### Namespace Isolation
 **Choice:** PID + UTS + Mount namespaces via `clone()`.
 **Tradeoff:** No network namespace — containers share the host network stack.
 **Justification:** Network namespace requires additional veth pair setup which is beyond the project scope. The three namespaces we use are sufficient to demonstrate isolation.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ### Supervisor Architecture
 **Choice:** Single long-running process accepting one CLI connection at a time.
 **Tradeoff:** CLI commands are serialized — two simultaneous `start` commands would queue up.
 **Justification:** Simplifies synchronization significantly. A multi-threaded accept loop would require careful locking around `handle_command`. For our use case, serialized commands are acceptable.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ### IPC and Logging
 **Choice:** Pipes for logging, UNIX socket for CLI.
 **Tradeoff:** Pipes are one-way and anonymous — we need one pipe per container.
 **Justification:** Pipes are the natural IPC for parent-child output capture. UNIX sockets are the natural IPC for request-response CLI commands. Using the same mechanism for both would be more complex.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ### Kernel Monitor
 **Choice:** Periodic RSS polling via kernel timer.
 **Tradeoff:** Not instantaneous — a process could briefly exceed hard limit between checks.
 **Justification:** Event-driven memory monitoring requires kernel tracepoints which are significantly more complex. Periodic polling is reliable and simple to implement correctly.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ### Scheduling Experiments
 **Choice:** `nice` values and CPU affinity via `taskset`.
 **Tradeoff:** Results vary with host load — not perfectly reproducible.
@@ -567,6 +577,7 @@ When two CPU-bound containers ran at the same nice value, CFS distributed CPU ti
 # 6. Scheduler Experiment Results
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ### Experiment 1 — CPU-bound containers with different priorities
 Two containers running `cpu_hog` simultaneously:
 - Container alpha: nice 0 (default priority)
@@ -580,6 +591,7 @@ Two containers running `cpu_hog` simultaneously:
 **Analysis:** CFS gave alpha approximately twice the CPU share of beta, consistent with the nice value difference. Beta took longer to complete the same workload.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 ### Experiment 2 — CPU-bound vs I/O-bound
 - Container alpha: CPU-bound (`cpu_hog`)
 - Container beta: I/O-bound (`io_pulse`)
@@ -590,7 +602,9 @@ Two containers running `cpu_hog` simultaneously:
 | beta | I/O-bound | ~5% | Ys |
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 **Analysis:** The I/O-bound container spent most of its time blocked waiting for I/O, voluntarily yielding the CPU. This allowed the CPU-bound container to use nearly all available CPU. CFS correctly identified beta as low-CPU-demand and prioritized alpha for CPU allocation.
+
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 																					~ Thank You ~
