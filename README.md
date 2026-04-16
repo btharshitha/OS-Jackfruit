@@ -151,45 +151,64 @@ In this implementation, basic tracking is demonstrated through printed PIDs, whi
 Implement a CLI interface for interacting with the supervisor. Commands are passed as arguments to the engine program.
 The command grammar and semantics in ***Canonical CLI Contract***.
 
+
 ### Required commands:
 •	start : launch a new container in the background
+
 •	run : launch a container and wait for it in the foreground
+
 •	ps : list tracked containers and their metadata
+
 •	logs : inspect a container log file
+
 •	stop : terminate a running container cleanly
+
 
 ### Demonstrate:
 •	CLI requests reach the long-running supervisor correctly
+
 •	Supervisor updates container state after each command
+
 •	SIGCHLD handling is correct and does not leak zombies
+
 •	SIGINT/SIGTERM to the supervisor trigger orderly shutdown
+
 •	Container termination path distinguishes graceful stop vs forced kill
+
 
 ## Terminal 1
 <img width="736" height="740" alt="Picture8" src="https://github.com/user-attachments/assets/76864f98-1a99-422a-9a13-176154215b45" />
 
 
+
 ## Terminal 2
 <img width="726" height="235" alt="Picture9" src="https://github.com/user-attachments/assets/c2cbd23f-8d78-477e-a547-2222008aa963" />
+
  
 
 #### 1. CLI → Supervisor communication
 Commands are issued via CLI and processed by the engine program. 
 The supervisor interprets these commands and performs the requested operations.
 
+
 #### 2. Supervisor updates state
 The supervisor manages container lifecycle and updates execution flow based on commands such as run and start.
 
+
 #### 3. SIGCHLD handling
 The system uses waitpid() to handle child process termination and avoid zombie processes.
+
 
 #### 4. SIGINT / SIGTERM
 The supervisor can be terminated using Ctrl+C (SIGINT). 
 This allows graceful shutdown of the system.
 
+
 #### 5. Graceful vs forced stop
 The stop command represents graceful termination. 
 A full implementation can distinguish between normal stop and forced kill using signals.
+
+
 
 Overall, the supervisor successfully manages container lifecycle, ensures proper signal handling, and provides a clean CLI interface for interaction.
 
@@ -198,6 +217,8 @@ Overall, the supervisor successfully manages container lifecycle, ensures proper
 
 
 # Task 3: Bounded-Buffer Logging and IPC Design
+
+
 
 This task covers Path A (logging): the pipe-based IPC from each container's stdout/stderr into the supervisor 
 
@@ -218,14 +239,16 @@ This task covers Path A (logging): the pipe-based IPC from each container's stdo
 In this task, container output is captured using pipe-based IPC instead of printing directly to the terminal. 
 Each container’s stdout and stderr are redirected to pipes, allowing the supervisor to collect and process logs asynchronously.
 
-**Producer–Consumer Model :-**  The logging system follows a producer–consumer architecture:
+
+**~ Producer–Consumer Model :-**  The logging system follows a producer–consumer architecture:
 •	Producer threads read data from container pipes (stdout and stderr) 
 •	The data is inserted into a bounded shared buffer 
 •	Consumer threads remove data from the buffer and write it to log files 
 This ensures efficient and concurrent log handling.
 
 
-**Synchronization Mechanism :-**  To avoid race conditions and ensure correctness:
+
+**~ Synchronization Mechanism :-**  To avoid race conditions and ensure correctness:
 •	A mutex is used to protect shared buffer access 
 •	Condition variables are used to: 
 o	Block producers when the buffer is full 
@@ -233,35 +256,43 @@ o	Block consumers when the buffer is empty
 This guarantees safe communication between threads.
 
 
-**Bounded Buffer Behavior :-**  The buffer has a fixed size to control memory usage:
+
+**~ Bounded Buffer Behavior :-**  The buffer has a fixed size to control memory usage:
 •	Prevents unlimited memory growth 
 •	Ensures backpressure when producers are faster than consumers 
 •	Avoids data loss and corruption 
 
 
-**Logging and Persistence :-**  Each container has a separate log file:
+
+**~ Logging and Persistence :-**  Each container has a separate log file:
 •	Logs are written continuously by consumer threads 
 •	Both stdout and stderr are captured 
 •	Data is preserved even if the container exits 
 
 
-**Clean Shutdown Handling :-**  The system ensures proper cleanup:
+
+**~ Clean Shutdown Handling :-**  The system ensures proper cleanup:
 •	Producer threads exit when the container terminates 
 •	Consumer threads flush remaining data before exiting 
 •	Threads are joined to avoid resource leaks
+
 
 
 ## Terminal 1
 <img width="561" height="259" alt="Picture10" src="https://github.com/user-attachments/assets/dd51831e-2659-4e88-9f4c-3ce598a55b46" />
 
 
+
 ## Terminal  2
 <img width="732" height="321" alt="Picture11" src="https://github.com/user-attachments/assets/2b3a46e7-43da-4f32-b473-cd04e067b5b4" />
+
 
 
 ---
 
 # Task 4: Kernel Memory Monitoring with Soft and Hard Limits
+
+
 
 ### Demonstrate:
 •	Control device at /dev/container_monitor
@@ -278,17 +309,22 @@ This guarantees safe communication between threads.
 
 •	Removal of stale or exited entries
 
-### Required policy behavior:
-•	Soft limit: log a warning event when the process first exceeds the soft limit
 
-•	Hard limit: terminate the process when it exceeds the hard limit
 
-### Integration detail:
+### > Required policy behavior:
+•	**Soft limit:** log a warning event when the process first exceeds the soft limit
+
+•	**Hard limit:** terminate the process when it exceeds the hard limit
+
+
+
+### > Integration detail:
 •	The supervisor must send the container's host PID to the kernel module
 
 •	The user-space metadata must reflect whether a container exited normally, was stopped by the supervisor, or was killed due to the hard limit
 
-### Required:
+
+### > Required:
 •	The supervisor must set an internal stop_requested flag before signaling a container from stop
 
 •	Classify termination as stopped when stop_requested is set and the container exits due to that stop flow
@@ -298,11 +334,15 @@ This guarantees safe communication between threads.
 •	Keep the final reason in metadata so ps output can distinguish normal exit, manual stop, and hard-limit kill
 
 
+
 ## Terminal 1
+<img width="761" height="413" alt="Picture12" src="https://github.com/user-attachments/assets/467a0c79-85ba-4711-b9af-5e469d921c33" />
 
  
 
 ## Terminal  2
+<img width="766" height="179" alt="Picture13" src="https://github.com/user-attachments/assets/fbfb6649-1c09-4352-b18f-c9434a33c88a" />
+
 
  
 ---
@@ -310,21 +350,39 @@ This guarantees safe communication between threads.
 
 # Task 5: Scheduler Experiments and Analysis
 
+
+
 Use the runtime to run controlled experiments that connect the project to Linux scheduling behavior.:
 •	At least two concurrent workloads with different behavior, such as CPU-bound and I/O-bound processes
+
 •	At least two scheduling configurations, such as different nice values or CPU affinities
+
 •	Measurement of observable outcomes such as completion time, responsiveness, or CPU share
+
 •	A short analysis of how the Linux scheduler treated the workloads
+
+
 The goal : not to reimplement a scheduler but to use your runtime as an experimental platform and explain scheduling behavior using evidence.
+
+
 At least one experiment must compare:
+
 •	Two containers running CPU-bound work with different priorities, or
+
 •	A CPU-bound container and an I/O-bound container running at the same time
 
+
+
 ## Terminal 1
+<img width="747" height="557" alt="Picture14" src="https://github.com/user-attachments/assets/6c6c542a-f822-42a2-8423-ce3800f26fd3" />
+
 
  
 
 ## Terminal  2
+<img width="745" height="164" alt="Picture15" src="https://github.com/user-attachments/assets/f0197b07-8184-4ace-adee-5092200262c5" />
+
+
 
  
 ---
@@ -332,26 +390,40 @@ At least one experiment must compare:
 
 # Task 6: Resource Cleanup
 
+
+
 By this point, cleanup logic should already be built into Tasks 1–4. This task is about verifying and demonstrating that teardown works end-to-end, not about designing it from scratch.
+
 Verify clean teardown in both user and kernel space:
+
 •	Child process reap in the supervisor (designed in Task 1)
+
 •	Logging threads exit and join correctly (designed in Task 3)
+
 •	File descriptors are closed on all paths
+
 •	User-space heap resources are released
+
 •	Kernel list entries are freed on module unload (designed in Task 4)
+
 •	No lingering zombie processes or stale metadata after demo run
 
+
+
 ## Terminal 1
+<img width="753" height="272" alt="Picture16" src="https://github.com/user-attachments/assets/12616be0-35fb-4ed5-95b1-91123bd37207" />
 
  
 
 ## Terminal 2
+<img width="754" height="421" alt="Picture17" src="https://github.com/user-attachments/assets/0d1653c8-f292-4567-9b80-4fd5166a60d7" />
+
 
  
 
-Task 6 clean teardown — dmesg shows kernel module registering container PID, stale entry removal on exit, and clean module unload. engine ps confirms container state as stopped with no zombie processes remaining
+### Task 6 clean teardown — dmesg shows kernel module registering container PID, stale entry removal on exit, and clean module unload. engine ps confirms container state as stopped with no zombie processes remaining
 
-																									~ Thank You ~
+												~ Thank You ~
 
 
 ---
