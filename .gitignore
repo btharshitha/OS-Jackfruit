@@ -1,0 +1,8 @@
+# Ignore the massive system directories that cause errors
+rootfs-base/
+rootfs-alpha/
+rootfs-beta/
+logs/
+modules.order
+Module.symvers
+.tmp_versions/
