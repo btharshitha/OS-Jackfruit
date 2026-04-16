@@ -69,7 +69,7 @@ Created separate writable root filesystems (rootfs-alpha, rootfs-beta) from base
 
 <img width="1650" height="800" alt="Picture2" src="https://github.com/user-attachments/assets/05a6687c-2b41-4247-8329-a31ee31ad905" />
 
---- 
+-----
 
 # Task 1: Multi-Container Runtime with Parent Supervisor
 Implement a parent supervisor process that can manage multiple containers at the same time instead of launching only one shell and exiting.
@@ -106,7 +106,7 @@ The supervisor is designed as a long-running process using an infinite loop.
 It utilizes clone() to launch multiple containers, each operating in isolated namespaces with its own root filesystem. 
 The supervisor remains active after container creation & continuously manages their concurrent execution without terminating.
 
-``
+
 ### Multi-Container Runtime with Parent Supervisor
 
 The supervisor process successfully launches and manages multiple containers concurrently using clone() with isolated namespaces (PID, UTS, mount). Each container runs in its own root filesystem and receives a unique PID. The supervisor remains active as a long-running process while containers execute.
