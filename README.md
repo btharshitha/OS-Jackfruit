@@ -407,7 +407,7 @@ At least one experiment must compare:
 By this point, cleanup logic should already be built into Tasks 1–4. This task is about verifying and demonstrating that teardown works end-to-end, not about designing it from scratch.
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*Verify clean teardown in both user and kernel space:*
+*The clean teardown in both user and kernel space:*
 
 •	Child process reap in the supervisor (designed in Task 1)
 
