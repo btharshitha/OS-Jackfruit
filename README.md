@@ -395,8 +395,11 @@ At least one experiment must compare:
 <img width="1650" height="800" alt="Picture15" src="https://github.com/user-attachments/assets/f0197b07-8184-4ace-adee-5092200262c5" />
 
 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## Observable differences in completion time and CPU share are shown.
+<img width="2131" height="1204" alt="image" src="https://github.com/user-attachments/assets/fe6aab7c-0c7a-4b7d-b70d-6e8f84171cbb" />
 
- 
+
 ---
 
 
