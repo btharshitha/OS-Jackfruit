@@ -390,7 +390,7 @@ At least one experiment must compare:
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ## Terminal 1
-<img width="747" height="987" alt="Picture14" src="https://github.com/user-attachments/assets/8a540084-f165-48f8-8e71-9c63a9d57109" />
+<img width="847" height="1000" alt="Picture14" src="https://github.com/user-attachments/assets/8a540084-f165-48f8-8e71-9c63a9d57109" />
 
 
 
